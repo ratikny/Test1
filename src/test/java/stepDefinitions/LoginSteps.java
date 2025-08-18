@@ -25,7 +25,7 @@ public class LoginSteps {
 
     @Given("I opened main page of website")
     public void i_opened_main_page_of_website() {
-        WebDriverManager.chromedriver().setup();
+        //WebDriverManager.chromedriver().setup();
 
         // --- НАЧАЛО ИЗМЕНЕНИЙ ---
 
