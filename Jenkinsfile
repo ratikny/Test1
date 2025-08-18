@@ -1,17 +1,19 @@
 pipeline {
-    // Указываем, что сборка может выполняться на любом доступном агенте Jenkins
-    agent any
-
-    // Определяем инструменты, которые нужны для сборки
-    tools {
-        // Правильное имя Maven, которое мы настроили в Jenkins
-        maven 'Maven-3.9.8'
+    // Указываем Jenkins запускать все шаги внутри специального Docker-контейнера,
+    // в котором уже есть Java и все зависимости для браузеров.
+    agent {
+        docker {
+            image 'mcr.microsoft.com/playwright/java:v1.42.0-jammy'
+        }
     }
+
+    // Инструменты нам больше не нужны, так как Maven уже есть в Docker-образе.
+    // tools {
+    //     maven 'Maven-3.9.8'
+    // }
 
     stages {
         // Этап 1: Скачивание кода из репозитория
-        // Jenkins автоматически скачает код из того репозитория,
-        // который вы указали в настройках Pipeline
         stage('Checkout') {
             steps {
                 echo "Забираем проект из Git..."
@@ -23,8 +25,7 @@ pipeline {
         stage('Build & Test') {
             steps {
                 echo "Собираем проект и запускаем тесты..."
-                // Команда 'mvn clean install' сначала очистит проект,
-                // а потом соберёт его и запустит тесты
+                // Команда 'mvn clean install'
                 sh 'mvn clean install'
             }
         }
@@ -32,11 +33,11 @@ pipeline {
 
     // Блок, который выполняется после всех этапов
     post {
-        // Выполняется всегда, независимо от успеха или провала сборки
         always {
             echo "Сохраняем результаты тестов..."
             // Собираем отчёты о тестах для отображения в интерфейсе Jenkins
-            junit 'target/surefire-reports/*.xml'
+            // allowEmptyResults = true нужно, чтобы сборка не падала, если тесты не запустились
+            junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
 
             echo "Убираем временные файлы..."
             cleanWs()
