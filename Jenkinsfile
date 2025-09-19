@@ -1,17 +1,20 @@
+// Версия Jenkinsfile без использования Docker
+
 pipeline {
-    // Указываем Jenkins запускать все шаги внутри специального Docker-контейнера,
-    // в котором уже есть Java и все зависимости для браузеров.
-    agent {
-        docker {
-            image 'mcr.microsoft.com/playwright/java:v1.42.0-jammy'
-        }
+    // 1. ИЗМЕНЕНИЕ: Указываем Jenkins запускать задачу на любом свободном агенте,
+    // а не в Docker-контейнере.
+    agent any
+
+    // 2. ИЗМЕНЕНИЕ: Раскомментировали и добавили инструменты.
+    // Теперь Jenkins сам подготовит Java и Maven для нашей сборки.
+    // Убедись, что названия 'JDK-11' и 'Maven-3.9.8' совпадают с теми,
+    // что настроены в Jenkins -> Manage Jenkins -> Global Tool Configuration.
+    tools {
+        jdk 'JDK-11' // Добавь сюда JDK
+        maven 'Maven-3.9.8'
     }
 
-    // Инструменты нам больше не нужны, так как Maven уже есть в Docker-образе.
-    // tools {
-    //     maven 'Maven-3.9.8'
-    // }
-
+    // Этапы сборки остаются такими же, как у тебя.
     stages {
         // Этап 1: Скачивание кода из репозитория
         stage('Checkout') {
@@ -25,20 +28,18 @@ pipeline {
         stage('Build & Test') {
             steps {
                 echo "Собираем проект и запускаем тесты..."
-                // Команда 'mvn clean install'
+                // Команда 'mvn clean install' скомпилирует код и запустит тесты.
+                // Для Windows используй: bat 'mvn clean install'
                 sh 'mvn clean install'
             }
         }
     }
 
-    // Блок, который выполняется после всех этапов
+    // Блок post тоже отличный, оставляем его без изменений.
     post {
         always {
             echo "Сохраняем результаты тестов..."
-            // Собираем отчёты о тестах для отображения в интерфейсе Jenkins
-            // allowEmptyResults = true нужно, чтобы сборка не падала, если тесты не запустились
             junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
-
             echo "Убираем временные файлы..."
             cleanWs()
         }
