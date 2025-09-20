@@ -10,7 +10,7 @@ pipeline {
     // Убедись, что названия 'JDK-11' и 'Maven-3.9.8' совпадают с теми,
     // что настроены в Jenkins -> Manage Jenkins -> Global Tool Configuration.
     tools {
-        jdk 'JDK-11' // Добавь сюда JDK
+        jdk 'JDK-17' // Добавь сюда JDK
         maven 'Maven-3.9.8'
     }
 
