@@ -32,14 +32,8 @@ pipeline {
             sh 'ls -l target'
 
             echo "Публикуем HTML-отчёт..."
-            publishHTML(target: [
-                allowMissing: true,
-                alwaysLinkToLastBuild: true,
-                keepAll: true,
-                reportDir: 'target',
-                reportFiles: 'cucumber-html-report.html',
-                reportName: 'Cucumber Report'
-            ])
+            archiveArtifacts artifacts: 'target/cucumber-html-report.html', allowEmptyArchive: true
+
 
             echo "Убираем временные файлы..."
             cleanWs()
