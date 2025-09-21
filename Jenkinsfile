@@ -1,22 +1,14 @@
 // Версия Jenkinsfile без использования Docker
 
 pipeline {
-    // 1. ИЗМЕНЕНИЕ: Указываем Jenkins запускать задачу на любом свободном агенте,
-    // а не в Docker-контейнере.
     agent any
 
-    // 2. ИЗМЕНЕНИЕ: Раскомментировали и добавили инструменты.
-    // Теперь Jenkins сам подготовит Java и Maven для нашей сборки.
-    // Убедись, что названия 'JDK-11' и 'Maven-3.9.8' совпадают с теми,
-    // что настроены в Jenkins -> Manage Jenkins -> Global Tool Configuration.
     tools {
-        jdk 'JDK-17' // Добавь сюда JDK
+        jdk 'JDK-17'
         maven 'Maven-3.9.8'
     }
 
-    // Этапы сборки остаются такими же, как у тебя.
     stages {
-        // Этап 1: Скачивание кода из репозитория
         stage('Checkout') {
             steps {
                 echo "Забираем проект из Git..."
@@ -24,30 +16,44 @@ pipeline {
             }
         }
 
-        // Этап 2: Сборка и запуск тестов
         stage('Build & Test') {
             steps {
                 echo "Собираем проект и запускаем тесты..."
-                // Команда 'mvn clean install' скомпилирует код и запустит тесты.
-                // Для Windows используй: bat 'mvn clean install'
                 sh 'mvn clean install'
             }
         }
     }
 
-    // Блок post тоже отличный, оставляем его без изменений.
+    // --- НАЧАЛО ИСПРАВЛЕННОГО БЛОКА ---
     post {
         always {
             echo "Сохраняем результаты тестов..."
+            // 1. Собираем стандартный JUnit отчёт
             junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
+
+            // 2. Публикуем красивый HTML-отчёт
+            echo "Публикуем HTML-отчёт..."
+            publishHTML(target: [
+                allowMissing: true,
+                alwaysLinkToLastBuild: true,
+                keepAll: true,
+                reportDir: 'target',
+                reportFiles: 'cucumber-html-report.html',
+                reportName: 'Cucumber Report'
+            ])
+
+            // 3. Очищаем рабочее пространство
             echo "Убираем временные файлы..."
             cleanWs()
         }
+
         success {
             echo "Все шаги прошли успешно!"
         }
+
         failure {
             echo "Ошибка! Проверь логи."
         }
     }
+    // --- КОНЕЦ ИСПРАВЛЕННОГО БЛОКА ---
 }
