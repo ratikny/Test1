@@ -1,5 +1,3 @@
-// Версия Jenkinsfile без использования Docker
-
 pipeline {
     agent any
 
@@ -24,14 +22,15 @@ pipeline {
         }
     }
 
-    // --- НАЧАЛО ИСПРАВЛЕННОГО БЛОКА ---
     post {
         always {
             echo "Сохраняем результаты тестов..."
-            // 1. Собираем стандартный JUnit отчёт
             junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
 
-            // 2. Публикуем красивый HTML-отчёт
+            // Диагностическая команда для проверки содержимого папки target
+            echo "Проверяем содержимое папки target..."
+            sh 'ls -l target'
+
             echo "Публикуем HTML-отчёт..."
             publishHTML(target: [
                 allowMissing: true,
@@ -42,7 +41,6 @@ pipeline {
                 reportName: 'Cucumber Report'
             ])
 
-            // 3. Очищаем рабочее пространство
             echo "Убираем временные файлы..."
             cleanWs()
         }
@@ -55,5 +53,4 @@ pipeline {
             echo "Ошибка! Проверь логи."
         }
     }
-    // --- КОНЕЦ ИСПРАВЛЕННОГО БЛОКА ---
 }
